@@ -1,0 +1,90 @@
+# Copyright Istio Authors
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+#
+# modified by duffqiu 
+# connect to alibaba rds mysql
+# using ssl, database name must be “ratings” hard code in ratings.js which replaces “test” name
+
+##################################################################################################
+# Ratings service using ssl to connect to mysql
+##################################################################################################
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ratings-v2-mysql-ssl
+  labels:
+    app: ratings
+    version: v2-mysql-ssl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ratings
+      version: v2-mysql-ssl
+  template:
+    metadata:
+      labels:
+        app: ratings
+        k8s.aliyun.com/image-accelerate-mode: on-demand
+        version: v2-mysql-ssl
+    spec:
+      containers:
+        - env:
+            - name: DB_TYPE
+              value: mysql
+            - name: MYSQL_DB_HOST
+              value: <alibaba rds dns address>
+            - name: MYSQL_DB_PORT
+              value: '3306'
+            - name: MYSQL_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: bookinfo-rds-ssl-secret
+            - name: MYSQL_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: bookinfo-rds-ssl-secret
+          image: ‘<image address>
+          ports:
+            - containerPort: 9080
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /home/node/ca-certificates.crt
+              name: volume-1707401314122
+              subPath: cacert
+      serviceAccountName: bookinfo-ratings-sa
+      volumes:
+        - name: volume-1707401314122
+          secret:
+            defaultMode: 420
+            secretName: db-ca-certs
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-ca-certs
+type: Opaque
+data:
+  cacert: <certification from alibaba rds>
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: bookinfo-rds-ssl-secret
+type: Opaque
+data:
+  password: <password from rds>
+  username: <username from rds>
