@@ -10,6 +10,7 @@ It is a modification version of "ratings mysql" which will
 ```bash
 docker build . -t <your registry address>/<namespace>/ratings:ssl --build-arg service_version=v2
 ```
+
 if you don't have your own registry, you can create one in Alibaba Cloud:
 https://www.alibabacloud.com/product/container-registry
 
